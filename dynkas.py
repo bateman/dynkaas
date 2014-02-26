@@ -39,8 +39,6 @@ class DyndnsKeepAlive(object):
 		# add the Handler to the logger
 		self.log.addHandler(fh)
 
-		self.log.debug("__init__")
-		
 		self.user = user
 		self.password = password
 				
@@ -52,7 +50,6 @@ class DyndnsKeepAlive(object):
 			self.imap = imaplib.IMAP4(IMAP_SERVER, IMAP_PORT)
 
 	def __enter__(self):
-		self.log.debug("__enter__")
 		#log in to the servers
 		self.smtp.starttls()
 		self.smtp.login(self.user, self.password)
@@ -63,7 +60,6 @@ class DyndnsKeepAlive(object):
 		return self
 
 	def __exit__(self, type, value, traceback):
-		self.log.debug("__exit__")
 		# close before logout
 		self.imap.close()
 		self.imap.logout()	
@@ -87,9 +83,9 @@ class DyndnsKeepAlive(object):
 		return unreadcount
 
 	def search_msgs(self, sender, subject, date):
-		# FIXME ignoring date for now
-		#result, email_ids = self.imap.search(None, '(SENTSINCE {date} FROM {sender} HEADER Subject "Your free Dyn hostname will expire")'.format(date=date, sender=sender))
-		result, email_ids = self.imap.search(None, '(FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
+		# TODO turn on/off data check by CL switch
+		# result, email_ids = self.imap.search(None, '(FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
+		result, email_ids = self.imap.search(None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
 		self.log.info('Search result: {result}. Email ids({n}): {data}'.format(result=result, n=len(email_ids), data=email_ids))
 		return email_ids
 		
@@ -171,14 +167,17 @@ class DyndnsKeepAlive(object):
 				# only process the first link
 				msg_id, link = matched_links.popitem()
 				html = urlopen(link).read().decode(encoding='UTF-8')
-				# parse the html to check the account will be kept alive for the next 30 days
-				#self.log.debug(html)				
+				# parse the html to make sure that the account will be kept alive for the next 30 days
+				# self.log.debug(html)	
+				# error msgs about multiple KA attempts on same link
 				error_msg1 = 'Error proccessing your host confirmation'
-				error_msg2 = 'Your hostname(s) have already expired and has been removed'
-				keepalive_msg = '...'				
+				error_msg2 = 'Your host confirmation has already been completed'		
+				# confirmation of successful KA attempt
+				keepalive_msg1 = 'Account Activity Confirmed'
+				keepalive_msg2 = 'has been confirmed as active'				
 				if (error_msg1 in html and error_msg2 in html):
-					self.log.warning('The script has processed an old email from Dyndns. This shouldn\'t happen. :-/')
-				#elif (keepalive_msg in html):
+					self.log.warning('The script has processed an old email from Dyndns. This shouldn\'t happen. To fix this, please, manually archive all Dyndns old emails from your Inbox.')
+				elif (keepalive_msg1 in html and keepalive_msg2 in html):
 					self.log.info('Everything went fine, sending confirmation by email and archiving the email')
 					# archive the dyndns request and send a notification by email that the script worked fine
 					self.archive_message(msg_id)
@@ -186,15 +185,15 @@ class DyndnsKeepAlive(object):
 					text = "The script was executed successfully on {date}.\n For more info, check this resource: http://github.com/dyndns-kas".format(date=datetime.datetime.now().strftime("%c"))
 					self.send_email(imap_username, imap_username, subject, text);
 				else:
-					self.log.error('Unkown error message please report the following error as an issue here at http://github.com/dyndns-kas\nError to report:\n\n{e}'.format(e=html))
+					self.log.error('Unknown error message please report the following error as an issue here at http://github.com/dyndns-kas\nError to report:\n\n{e}'.format(e=html))
 		else:
 			self.log.info('No emails from dyn.com found as of {d}'.format(d=date.today()))
 			
-		self.log.info('Exiting')
+		self.log.info('Exiting script at {now}'.format(now=datetime.datetime.now().strftime("%c")))
 	
 if __name__ == '__main__':
 	# example:
 	imap_username = 'dummy@gmail.com'
-	imap_password = 'secret'
+	imap_password = '#secret'
 	with DyndnsKeepAlive(imap_username, imap_password) as kas:
 		kas.main()
