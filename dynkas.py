@@ -40,7 +40,7 @@ SMTP_PORT = '587'
 
 class DyndnsKeepAlive(object):
 	
-	def __init__(self, user, password, debug, timedelta):
+	def __init__(self, user, password, debug, timedelta, label):
 		self.log = logging.getLogger('Dyndns auto keep-alive script')
 		if(debug == True):
 			self.log.setLevel(logging.DEBUG)
@@ -60,6 +60,7 @@ class DyndnsKeepAlive(object):
 		self.user = user
 		self.password = password
 		self.timedelta = timedelta
+		self.label = label
 				
 		self.smtp = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
 		
@@ -102,13 +103,15 @@ class DyndnsKeepAlive(object):
 		self.log.debug('Unread emails: {n}'.format(n=unreadcount))
 		return unreadcount
 
+	# TODO use UIDs instead of volatile IDs
 	def search_msgs(self, sender, subject, date):
-		result, email_ids = self.imap.search(None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
-		self.log.info('Search result: {result}. Email ids({n}): {data}'.format(result=result, n=len(email_ids), data=email_ids))
-		return email_ids
+		result, email_uids = self.imap.uid('search', None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
+		#result, email_uids = self.imap.search(None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
+		self.log.info('Search result: {result}. Email uids({n}): {data}'.format(result=result, n=len(email_uids), data=email_uids))
+		return email_uids
 		
-	def fetch_message(self, num):
-		status, data = self.imap.fetch(num, '(RFC822)')
+	def fetch_message(self, uid):
+		status, data = self.imap.uid('fetch', uid, '(RFC822)')
 		email_msg = data[0][1]
 		return email_msg
 				
@@ -123,15 +126,16 @@ class DyndnsKeepAlive(object):
 		self.log.info('Matched string: {match}'.format(match=match))
 		return match
 
-	def archive_message(self, msg_uid):
+	def archive_message(self, msg_uid, label):
 		# assuming self.imap.select('Inbox')
-		# make sure it is marked as read
-		print (msg_uid)
-		# archive
-		# TODO internet/dyndns label should be an option from CL
-		typ, data = self.imap.uid('STORE', msg_uid, '+X-GM-LABELS', 'internet/dyndns')
-		# move from inbox
-		typ, data = self.imap.uid('STORE', msg_uid, '-X-GM-LABELS', '\Inbox')
+		# move to label first
+		self.log.debug("Moving message uid {u} to label{l}".format(u=msg_uid, l=label))
+		res, data = self.imap.uid('STORE', msg_uid, '+X-GM-LABELS', label) 
+		self.log.debug(res)
+		# then archive from inbox
+		self.log.debug("Archiving message uid {u} from Inbox".format(u=msg_uid)) 
+		res, data = self.imap.uid('STORE', msg_uid, '+FLAGS', '\\Deleted')
+		self.log.debug(res)
 		
 	def send_email(self, from_addr, to_addr, subject, text, file):
 		self.log.debug('Sending email notification')
@@ -158,12 +162,10 @@ class DyndnsKeepAlive(object):
 
 	def main(self):
 		self.log.info('Starting script at {now}'.format(now=datetime.datetime.now().strftime("%c")))
-		self.imap.select('INBOX')
 		# we ignore the unread, we just assume the dyndns automatic email is in the inbox
 		# yet to be archived. it will be archived by the script once processed.
+		self.imap.select('INBOX', False)
 		
-		# check for new mail from dyndns since last check (yesteday)
-		# TODO need to store last datetime instead of timedelta[1] (1 day) 
 		# as the email from dyndns is automatically sent 5 and 3 days before expiration
 		# setting a time delta back to 5 - 3 days seems reasonable.
 		since_date = (date.today() - datetime.timedelta(self.timedelta)).strftime("%d-%b-%Y")
@@ -171,29 +173,32 @@ class DyndnsKeepAlive(object):
 		
 		sent_from = 'donotreply@dyn.com'
 		with_subject = 'Your free Dyn hostname will expire'
-		email_ids = self.search_msgs(sent_from, with_subject, since_date)	
-		if(len(email_ids) > 0):
+		email_uids = self.search_msgs(sent_from, with_subject, since_date)	
+		if(len(email_uids) > 0):
 			link_starts_with = 'https://account.dyn.com/eml/expatconf'
 			whole_link_len = 62
 			
 			matched_links = {}
-			for id in email_ids[0].split():
-				email = self.fetch_message(id)
+			for uid in email_uids[0].split():
+				# decode is needed to turn bytes into a string
+				uid = uid.decode(encoding='UTF-8')
+				email = self.fetch_message(uid)
 				email = email.decode(encoding='UTF-8')
 				self.log.debug('Email: {msg}\n'.format(msg=email))
 				tmp = self.parse_email(email, link_starts_with, whole_link_len)
 				if (tmp != ''):
-					# TODO use a key value structure, with id as key and email text as value
-					matched_links[id] = tmp
+					# TODO use a key value structure, with uid as key and email text as value
+					# see issue #5
+					matched_links[uid] = tmp
 				
 			self.log.info('Matched links: {l}'.format(l=matched_links.values()))
 			
 			# fault tolerant, just in case of more than one email in the inbox from dyn.com
 			# (yet, past emails should've been archived or ignored by the time limit in the search)
-			email_ids = matched_links.keys()
-			if (len(email_ids) > 0):
+			email_uids = matched_links.keys()
+			if (len(email_uids) > 0):
 				# only process the first link
-				msg_id, link = matched_links.popitem()
+				msg_uid, link = matched_links.popitem()
 				html = urlopen(link).read().decode(encoding='UTF-8')
 				# parse the html to make sure that the account will be kept alive for the next 30 days
 				self.log.debug(html)	
@@ -214,11 +219,11 @@ class DyndnsKeepAlive(object):
 				elif (keepalive_msg1 in html and keepalive_msg2 in html):
 					self.log.info('Everything went fine, sending confirmation by email and archiving the email')
 					# archive the dyndns request and send a notification by email that the script worked fine
-					# self.archive_message(msg_id)					
-					text = "The script was executed successfully on {date}.\n For more info, check this resource: http://github.com/dyndns-kas".format(date=datetime.datetime.now().strftime("%c"))
+					self.archive_message(msg_uid, self.label)					
+					text = "The script was executed successfully on {date}.\nFor more info, check this resource: http://github.com/dynkas".format(date=datetime.datetime.now().strftime("%c"))
 					filename = "confirmation.html"
 				else:
-					text = 'Unknown error message please report the following error as an issue here at http://github.com/dyndns-kas\nError to report:\n\n{e}'.format(e=html)
+					text = 'Unknown error message please report the following error as an issue here at http://github.com/dynkas\nError to report:\n\n{e}'.format(e=html)
 					self.log.error(text)
 					filename = "error.html"
 
@@ -237,12 +242,13 @@ if __name__ == '__main__':
 	password = 'secret'
 	debug = False
 	timedelta = 5
+	label = 'internet/dyndns'
 	
 	try:
 		if(len(sys.argv)<=1):
 			raise(getopt.GetoptError("No arguments!"))
 		else:
-			opts, args = getopt.getopt(sys.argv[1:],"hu:p:dt:",["help","username=","password=","debug","timedelta="])
+			opts, args = getopt.getopt(sys.argv[1:],"hu:p:dt:l:",["help","username=","password=","debug","timedelta=","label="])
 	except getopt.GetoptError:
 		print('Wrong or no arguments. Please, enter\n\n\tdynkas.py [-h|--help]\n\nfor usage info.')
 		sys.exit(2)
@@ -254,7 +260,8 @@ if __name__ == '__main__':
 					\t-u, --username  <email@gmail>          your gmail address\n\
 					\t-p, --password  <secret>               your secret password\n\
 					\t-d, --debug                            shows debug info into log file\n\
-					\t-t, --timedelta <N>                    checks emails back to N days, recommended value between 3-5')					
+					\t-t, --timedelta <N>                    checks emails back to N days, recommended value between 3-5\n\
+					\t-l, --label     <label>                label to archive the email to, default is internet/dyndns')					
 			sys.exit()
 		elif opt in ("-u", "--username"):
 			username = arg
@@ -270,6 +277,8 @@ if __name__ == '__main__':
 				w = "Error parsing {td} into integer. Using default timedelta of {dtd}".format(td=arg, dtd=timedelta)
 				print(w)
 				self.log.warning(w)
+		elif opt in ("-l", "--label"):
+			label = arg
 
-	with DyndnsKeepAlive(username, password, debug, timedelta) as kas:
+	with DyndnsKeepAlive(username, password, debug, timedelta, label) as kas:
 		kas.main()
