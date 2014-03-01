@@ -19,10 +19,11 @@ Launch from cron or command line. **Safest bet is to run it every day, at most e
 Usage: 
 `dynkas.py [OPTIONS]`
 * `-h, --help` &nbsp;&nbsp;&nbsp;&nbsp; prints this help
+* `-d, --debug` &nbsp;&nbsp;&nbsp;&nbsp; shows debug info into log file
 * `-u, --username email@gmail` &nbsp;&nbsp;&nbsp;&nbsp; your gmail address
 * `-p, --password secret` &nbsp;&nbsp;&nbsp;&nbsp; your secret password
-* `-d, --debug` &nbsp;&nbsp;&nbsp;&nbsp; shows debug info into log file
 * `-t, --timedelta N` &nbsp;&nbsp;&nbsp;&nbsp;  checks emails back to N days, 5 default
+* `-l, --label L` &nbsp;&nbsp;&nbsp;&nbsp; label L to archive the email to, default is internet/dyndns
 
 Known issues & limitations
 --------------------------

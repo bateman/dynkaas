@@ -257,9 +257,9 @@ if __name__ == '__main__':
 		if opt in ("-h", "--help"):
 			print('Usage: dynkas.py [OPTIONS]\n\n\
 					\t-h, --help                             prints this help\n\
+					\t-d, --debug                            shows debug info into log file\n\
 					\t-u, --username  <email@gmail>          your gmail address\n\
 					\t-p, --password  <secret>               your secret password\n\
-					\t-d, --debug                            shows debug info into log file\n\
 					\t-t, --timedelta <N>                    checks emails back to N days, recommended value between 3-5\n\
 					\t-l, --label     <label>                label to archive the email to, default is internet/dyndns')					
 			sys.exit()
