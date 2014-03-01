@@ -13,12 +13,13 @@ Requirements
 Usage instructions
 ==================
 Launch from cron or command line.
+
 Usage: dynkas.py [OPTIONS]
-	-h, --help                             prints this help
-	-u, --username  <email@gmail>          your gmail address
-	-p, --password  <secret>               your secret password
-	-d, --debug                            shows debug info into log file
-	-t, --timedelta <value between 3-5>    checks emails back to timedelta days
+* -h, --help                             prints this help
+* -u, --username  <email@gmail>          your gmail address
+* -p, --password  <secret>               your secret password
+* -d, --debug                            shows debug info into log file
+* -t, --timedelta <value between 3-5>    checks emails back to timedelta days
 
 Known issues & limitations
 ==========================
