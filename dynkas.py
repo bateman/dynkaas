@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 """
-	DyndnsKeepAlive script (dynkas)
-
+	DyndnsKeepAlive script (dynkas) -	https://github.com/bateman/dynkas
+	
 	Requires:
 	- Python 3.x
 	- a Dyndns account
-	- a Gmail account with IMAP  enabled
-	
+	- a Gmail account with IMAP enabled
+	- Emails must be in Inbox (i.e., not archived, may also have other labels).	
 """
 import getopt
 import sys
@@ -220,10 +220,10 @@ class DyndnsKeepAlive(object):
 					self.log.info('Everything went fine, sending confirmation by email and archiving the email')
 					# archive the dyndns request and send a notification by email that the script worked fine
 					self.archive_message(msg_uid, self.label)					
-					text = "The script was executed successfully on {date}.\nFor more info, check this resource: http://github.com/dynkas".format(date=datetime.datetime.now().strftime("%c"))
+					text = "The script was executed successfully on {date}.\nFor more info, check this resource: https://github.com/bateman/dynkas".format(date=datetime.datetime.now().strftime("%c"))
 					filename = "confirmation.html"
 				else:
-					text = 'Unknown error message please report the following error as an issue here at http://github.com/dynkas\nError to report:\n\n{e}'.format(e=html)
+					text = 'Unknown error message please report the following error as an issue here at https://github.com/bateman/dynkas\nError to report:\n\n{e}'.format(e=html)
 					self.log.error(text)
 					filename = "error.html"
 
