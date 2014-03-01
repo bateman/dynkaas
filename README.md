@@ -26,7 +26,7 @@ Usage:
 * `-d, --debug` &nbsp;&nbsp;&nbsp;&nbsp; shows debug info into log file
 * `-u, --username email@gmail` &nbsp;&nbsp;&nbsp;&nbsp; your gmail address
 * `-p, --password secret` &nbsp;&nbsp;&nbsp;&nbsp; your secret password
-* `-t, --timedelta N` &nbsp;&nbsp;&nbsp;&nbsp;  checks emails back to N days, 5 default
+* `-t, --timedelta N` &nbsp;&nbsp;&nbsp;&nbsp;  checks emails back to N days, default is 5
 * `-l, --label L` &nbsp;&nbsp;&nbsp;&nbsp; label L to archive the email to, default is _internet/dyndns_
 
 Known issues & limitations
