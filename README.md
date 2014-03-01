@@ -15,12 +15,12 @@ Usage instructions
 Launch from cron or command line.
 
 Usage: 
-`dynkas.py [OPTIONS]
-* -h, --help                             prints this help
-* -u, --username  _email@gmail_          your gmail address
-* -p, --password  _secret_               your secret password
-* -d, --debug                            shows debug info into log file
-* -t, --timedelta _N_                    checks emails back to N days, 5 default`
+`dynkas.py [OPTIONS]`
+* `-h, --help`                             prints this help
+* `-u, --username email@gmail`          your gmail address
+* `-p, --password secret`               your secret password
+* `-d, --debug`                            shows debug info into log file
+* `-t, --timedelta N`                    checks emails back to N days, 5 default`
 
 Known issues & limitations
 ==========================
