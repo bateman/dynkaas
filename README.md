@@ -5,6 +5,10 @@ dynkas
 This script automatically checks your inbox for such email messages sent from Dyndns.com, parses them, opens the link and archive those emails.
 Confirmation messages are sent by the script in case of success or failure, so that users what to do.
 
+Download
+--------
+Current reaease is [0.2](https://github.com/bateman/dynkas/archive/master.zip).
+
 Requirements
 ------------
 * Dyndns free account
