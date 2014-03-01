@@ -11,9 +11,16 @@
 """
 import getopt
 import sys
+import os
 
 import smtplib
 import imaplib
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.utils import formatdate
+from email.encoders import encode_base64
 
 from urllib.request import urlopen
 
@@ -87,6 +94,7 @@ class DyndnsKeepAlive(object):
 			self.mailboxes.append(item.split()[-1])
 		return rc
   
+	# unused
 	def get_unread_count(self):	
 		# Count the unread emails, should it be unread or not? Maybe archived or not...
 		status, response = self.imap.status('INBOX', "(UNSEEN)")
@@ -95,15 +103,12 @@ class DyndnsKeepAlive(object):
 		return unreadcount
 
 	def search_msgs(self, sender, subject, date):
-		# TODO turn on/off data check by CL switch
-		# result, email_ids = self.imap.search(None, '(FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
 		result, email_ids = self.imap.search(None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
 		self.log.info('Search result: {result}. Email ids({n}): {data}'.format(result=result, n=len(email_ids), data=email_ids))
 		return email_ids
 		
 	def fetch_message(self, num):
 		status, data = self.imap.fetch(num, '(RFC822)')
-		#email_msg = email.message_from_string(data[0][1])
 		email_msg = data[0][1]
 		return email_msg
 				
@@ -128,22 +133,32 @@ class DyndnsKeepAlive(object):
 		# move from inbox
 		typ, data = self.imap.uid('STORE', msg_uid, '-X-GM-LABELS', '\Inbox')
 		
-	def send_email(self, from_addr, to_addr, subject, text):
-		header  = 'From: %s\n' % from_addr
-		header += 'To: %s\n' % ','.join(to_addr)
-		header += 'Subject: %s\n\n' % subject
-		email = header + text
-		problems = self.smtp.sendmail(from_addr, to_addr, email)
+	def send_email(self, from_addr, to_addr, subject, text, file):
+		self.log.debug('Sending email notification')
+		email = MIMEMultipart()
+		email['From'] = from_addr
+		email['To'] = to_addr
+		email['Date'] = formatdate(localtime=True)
+		email['Subject'] = subject
+		email.attach(MIMEText(text))
 
-	# def print_msg(self, num):
-		# self.imap.select('Inbox')
-		# status, data = self.imap.fetch(num, '(RFC822)')
-		# print 'Message %s\n%s\n' % (num, data[0][1])
+		if(file != None):
+			part = MIMEBase('application', "octet-stream")
+			fp = open(file,"rb")
+			part.set_payload(fp.read())
+			fp.close()
+			encode_base64(part)
+			part.add_header('Content-Disposition', 'attachment; filename="{f}"'.format(f=file))
+			email.attach(part)
+			try:
+				problems = self.smtp.sendmail(from_addr, to_addr, email.as_string())
+			except Exception:
+				self.log.error("Unable to send email. Reasons:\n{}".format(problems))
+		self.log.debug('Email sent')
 
 	def main(self):
 		self.log.info('Starting script at {now}'.format(now=datetime.datetime.now().strftime("%c")))
 		self.imap.select('INBOX')
-		# unread = self.get_unread_count()
 		# we ignore the unread, we just assume the dyndns automatic email is in the inbox
 		# yet to be archived. it will be archived by the script once processed.
 		
@@ -165,7 +180,7 @@ class DyndnsKeepAlive(object):
 			for id in email_ids[0].split():
 				email = self.fetch_message(id)
 				email = email.decode(encoding='UTF-8')
-				#self.log.debug('Email: {msg}\n'.format(msg=email))
+				self.log.debug('Email: {msg}\n'.format(msg=email))
 				tmp = self.parse_email(email, link_starts_with, whole_link_len)
 				if (tmp != ''):
 					# TODO use a key value structure, with id as key and email text as value
@@ -181,8 +196,10 @@ class DyndnsKeepAlive(object):
 				msg_id, link = matched_links.popitem()
 				html = urlopen(link).read().decode(encoding='UTF-8')
 				# parse the html to make sure that the account will be kept alive for the next 30 days
-				# self.log.debug(html)	
+				self.log.debug(html)	
 				
+				filename = ""
+				attachment = None
 				# error msgs about multiple KA attempts on same link
 				error_msg1 = 'Error proccessing your host confirmation'
 				error_msg2 = 'Your host confirmation has already been completed'		
@@ -193,25 +210,28 @@ class DyndnsKeepAlive(object):
 				if (error_msg1 in html and error_msg2 in html):
 					text = 'The script has processed an old email from Dyndns. This shouldn\'t happen.\nTo fix this, please, manually archive all Dyndns old emails from your Inbox.'
 					self.log.warning(text)
+					filename = "warning.html"
 				elif (keepalive_msg1 in html and keepalive_msg2 in html):
 					self.log.info('Everything went fine, sending confirmation by email and archiving the email')
 					# archive the dyndns request and send a notification by email that the script worked fine
 					# self.archive_message(msg_id)					
 					text = "The script was executed successfully on {date}.\n For more info, check this resource: http://github.com/dyndns-kas".format(date=datetime.datetime.now().strftime("%c"))
+					filename = "confirmation.html"
 				else:
-					# TODO send html code as a page attached
 					text = 'Unknown error message please report the following error as an issue here at http://github.com/dyndns-kas\nError to report:\n\n{e}'.format(e=html)
 					self.log.error(text)
-					
+					filename = "error.html"
+
+				with open(os.path.basename(filename), "w") as attachment:
+					print(html, file=attachment)
 				subject = 'Dyndns auto-keep-alive script notifcation'
-				self.send_email(self.user, self.user, subject, text)
+				self.send_email(self.user, self.user, subject, text, filename)
 		else:
 			self.log.info('No emails from dyn.com found as of {d}'.format(d=date.today()))
 			
 		self.log.info('Exiting script at {now}'.format(now=datetime.datetime.now().strftime("%c")))
-	
+		
 if __name__ == '__main__':
-	
 	# default CL arg values
 	username = 'name@gmail.com'
 	password = 'secret'
@@ -219,9 +239,12 @@ if __name__ == '__main__':
 	timedelta = 5
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:],"hu:p:dt:",["help","username=","password=","debug","timedelta="])
+		if(len(sys.argv)<=1):
+			raise(getopt.GetoptError("No arguments!"))
+		else:
+			opts, args = getopt.getopt(sys.argv[1:],"hu:p:dt:",["help","username=","password=","debug","timedelta="])
 	except getopt.GetoptError:
-		print('Wrong arg. Please, enter dynkas.py [-h|--help] for usage info.')
+		print('Wrong or no arguments. Please, enter\n\n\tdynkas.py [-h|--help]\n\nfor usage info.')
 		sys.exit(2)
 		
 	for opt, arg in opts:
@@ -231,7 +254,7 @@ if __name__ == '__main__':
 					\t-u, --username  <email@gmail>          your gmail address\n\
 					\t-p, --password  <secret>               your secret password\n\
 					\t-d, --debug                            shows debug info into log file\n\
-					\t-t, --timedelta <value between 3-5>    checks emails back to timedelta days')					
+					\t-t, --timedelta <N>                    checks emails back to N days, recommended value between 3-5')					
 			sys.exit()
 		elif opt in ("-u", "--username"):
 			username = arg
