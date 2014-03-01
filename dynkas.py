@@ -187,8 +187,6 @@ class DyndnsKeepAlive(object):
 				self.log.debug('Email: {msg}\n'.format(msg=email))
 				tmp = self.parse_email(email, link_starts_with, whole_link_len)
 				if (tmp != ''):
-					# TODO use a key value structure, with uid as key and email text as value
-					# see issue #5
 					matched_links[uid] = tmp
 				
 			self.log.info('Matched links: {l}'.format(l=matched_links.values()))
