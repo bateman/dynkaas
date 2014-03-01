@@ -16,10 +16,10 @@ Launch from cron or command line.
 
 Usage: dynkas.py [OPTIONS]
 * -h, --help                             prints this help
-* -u, --username  <email@gmail>          your gmail address
-* -p, --password  <secret>               your secret password
+* -u, --username  _email@gmail_          your gmail address
+* -p, --password  _secret_               your secret password
 * -d, --debug                            shows debug info into log file
-* -t, --timedelta <value between 3-5>    checks emails back to timedelta days
+* -t, --timedelta _N_                    checks emails back to timedelta days, 5 default
 
 Known issues & limitations
 ==========================
