@@ -27,4 +27,4 @@ Usage:
 
 Known issues & limitations
 --------------------------
-As of now, archiving processed messages in GMail does not work yet. See issue #3 description for more.
+As of now, none.
