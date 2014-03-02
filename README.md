@@ -5,6 +5,12 @@ dynkaas
 This script automatically checks your inbox for such email messages sent from Dyndns.com, parses them, opens the link and archive those emails.
 Confirmation messages are sent by the script in case of success or failure, so that users what to do.
 
+Why this script is better than others
+-------------------------------------
+Several other scripts are available on Github to prevent a free Dyndns account to expire. Yet, they use screenscraping to automatically log in the website to prevent expiration. As this solution relies on parsing html code, every singla change to the page structure will likely result in breaking such scripts.
+
+The approach of opening the link as per Dyndns account promises to be fair more robust.
+
 Download
 --------
 Current reaease is [0.2](https://github.com/bateman/dynkas/archive/master.zip).
@@ -32,3 +38,7 @@ Usage:
 Known issues & limitations
 --------------------------
 As of now, none.
+
+License
+-------
+The MIT License (MIT).
