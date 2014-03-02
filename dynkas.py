@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-	DyndnsKeepAccountAlive script (dynkaas) -	https://github.com/bateman/dynkaas
+	Dyndns Keep Account Alive script (dynkaas) -	https://github.com/bateman/dynkaas
 	
 	Requires:
 	- Python 3.x
