@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-	DyndnsKeepAlive script (dynkas) -	https://github.com/bateman/dynkas
+	DyndnsKeepAccountAlive script (dynkaas) -	https://github.com/bateman/dynkaas
 	
 	Requires:
 	- Python 3.x
@@ -47,7 +47,7 @@ class DyndnsKeepAlive(object):
 		else:
 			self.log.setLevel(logging.WARNING)
 		# add a file handler
-		fh = logging.handlers.RotatingFileHandler('dynkas.log')
+		fh = logging.handlers.RotatingFileHandler('dynkaas.log')
 		if(debug == True):
 			fh.setLevel(logging.DEBUG)
 		else:
@@ -218,10 +218,10 @@ class DyndnsKeepAlive(object):
 					self.log.info('Everything went fine, sending confirmation by email and archiving the email')
 					# archive the dyndns request and send a notification by email that the script worked fine
 					self.archive_message(msg_uid, self.label)					
-					text = "The script was executed successfully on {date}.\nFor more info, check this resource: https://github.com/bateman/dynkas".format(date=datetime.datetime.now().strftime("%c"))
+					text = "The script was executed successfully on {date}.\nFor more info, check this resource: https://github.com/bateman/dynkaas".format(date=datetime.datetime.now().strftime("%c"))
 					filename = "confirmation.html"
 				else:
-					text = 'Unknown error message please report the following error as an issue here at https://github.com/bateman/dynkas\nError to report:\n\n{e}'.format(e=html)
+					text = 'Unknown error message please report the following error as an issue here at https://github.com/bateman/dynkaas\nError to report:\n\n{e}'.format(e=html)
 					self.log.error(text)
 					filename = "error.html"
 
@@ -248,12 +248,12 @@ if __name__ == '__main__':
 		else:
 			opts, args = getopt.getopt(sys.argv[1:],"hu:p:dt:l:",["help","username=","password=","debug","timedelta=","label="])
 	except getopt.GetoptError:
-		print('Wrong or no arguments. Please, enter\n\n\tdynkas.py [-h|--help]\n\nfor usage info.')
+		print('Wrong or no arguments. Please, enter\n\n\tdynkaas.py [-h|--help]\n\nfor usage info.')
 		sys.exit(2)
 		
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print('Usage: dynkas.py [OPTIONS]\n\n\
+			print('Usage: dynkaas.py [OPTIONS]\n\n\
 					\t-h, --help                             prints this help\n\
 					\t-d, --debug                            shows debug info into log file\n\
 					\t-u, --username  <email@gmail>          your gmail address\n\
