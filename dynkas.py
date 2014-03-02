@@ -233,6 +233,7 @@ class DyndnsKeepAlive(object):
 			self.log.info('No emails from dyn.com found as of {d}'.format(d=date.today()))
 			
 		self.log.info('Exiting script at {now}'.format(now=datetime.datetime.now().strftime("%c")))
+		sys.exit(0)
 		
 if __name__ == '__main__':
 	# default CL arg values
