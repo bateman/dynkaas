@@ -7,7 +7,7 @@ Confirmation messages are sent by the script in case of success or failure, so t
 
 Why this script is better than others
 -------------------------------------
-Several other scripts are available on Github to prevent a free Dyndns account to expire. Yet, they use screenscraping to automatically log in the website to prevent expiration. As this solution relies on parsing html code, every singla change to the page structure will likely result in breaking such scripts.
+Several other scripts are available on Github to prevent a free Dyndns account to expire. Yet, they use screenscraping to automatically log in the website to prevent expiration. As this solution relies on parsing html code, even smallest, tiny changed to the page structure will likely result in breaking such scripts.
 
 The approach of opening the link as per Dyndns account promises to be fair more robust.
 
