@@ -1,6 +1,6 @@
 dynkaas
 ======
-**_Dyndns keep-account-alive script_** is a Python scripts that prevents free Dyndns accounts to expire. In fact, in case of non-premium accouts, Dyndns.com sends to their users automatic email messages every 30 days. Such emails contain a link that must be opened to prevent the account to expire. 
+**_DYNdns Keep-Account-Alive Script_** is a Python scripts that prevents free Dyndns accounts to expire. In fact, in case of non-premium accouts, Dyndns.com sends to their users automatic email messages every 30 days. Such emails contain a link that must be opened to prevent the account to expire. 
 
 This script automatically checks your inbox for such email messages sent from Dyndns.com, parses them, opens the link and archive those emails.
 Confirmation messages are sent by the script in case of success or failure, so that users what to do.
