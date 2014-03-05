@@ -9,7 +9,7 @@ Why this script is better than others
 -------------------------------------
 Several other scripts are available on Github to prevent a free Dyndns account to expire. Yet, they use screenscraping to automatically log in the website to prevent expiration. As this solution relies on parsing html code, even smallest, tiny changed to the page structure will likely result in breaking such scripts.
 
-The approach of opening the link as per proper, Dyndns email rquest promises to be fair more robust.
+The approach of opening the link, as per proper Dyndns email request, promises to be fair more robust.
 
 Download
 --------
