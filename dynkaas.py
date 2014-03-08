@@ -31,6 +31,12 @@
 """
 
 __author__ = '@bateman'
+__license__ = "MIT"
+__date__ = '08-03-2014'
+__version_info__ = (0, 2, 0)
+__version__ = '.'.join(str(i) for i in __version_info__)
+__home__ = 'https://github.com/bateman/dynkaas'
+__download__ = 'https://github.com/bateman/dynkaas/archive/master.zip'
 
 import getopt
 import sys
