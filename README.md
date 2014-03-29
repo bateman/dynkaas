@@ -20,7 +20,7 @@ Requirements
 * Dyndns free account
 * GMail account with IMAP access enabled
 * Pyhton 3+
-* Emails must be in Inbox (i.e., not archived). May also have other labels.
+* Dyndns emails must be in Inbox (i.e., not archived). May also have other labels.
 
 Usage instructions
 ------------------
