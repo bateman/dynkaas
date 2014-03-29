@@ -1,4 +1,8 @@
 #!/bin/bash
-# Note: Replace values between <> before running
-#       or run with -h, --help for more options
-python dynkaas.py -u<YourEmail>@gmail.com -p<Secret>
+
+# Note: Please, run with -h, --help for more options
+
+#Python command
+PYTHON="/usr/local/bin/python"
+
+$PYTHON dynkaas.py $@
