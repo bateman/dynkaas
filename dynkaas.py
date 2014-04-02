@@ -132,7 +132,6 @@ class DyndnsKeepAlive(object):
 		self.log.debug('Unread emails: {n}'.format(n=unreadcount))
 		return unreadcount
 
-	# TODO use UIDs instead of volatile IDs
 	def search_msgs(self, sender, subject, date):
 		result, email_uids = self.imap.uid('search', None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
 		#result, email_uids = self.imap.search(None, '(SENTSINCE {date} FROM {sender} HEADER Subject "{subject}")'.format(date=date, sender=sender, subject=subject))
